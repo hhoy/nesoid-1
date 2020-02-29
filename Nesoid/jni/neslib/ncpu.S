@@ -90,10 +90,10 @@ ldmfd sp!,{r0-r3,r12,lr}
 @@@
 @@@ CYCLE_NEXT
 @@@
-@@@ �Ĥꥵ�����������å����ƻĤäƤ���м���̿���¹�
-@@@ �����������ߤ�����å����ʤ�
+@@@ 残りサイクルをチェックして残っていれば次の命令を実行
+@@@ ただし割り込みをチェックしない
 @@@
-@@@ �ʤ�̾�����Ѥ���(�ɡ��Ǥ⤤�����ɡ�
+@@@ なんか名前が変だな(どーでもいーけどー
 @@@
 .macro	CYCLE_NEXT	n, unused=0, do_cyc_add=1
 	@@DEBUG_INFO
@@ -134,8 +134,8 @@ ldmfd sp!,{r0-r3,r12,lr}
 @@@
 @@@ CYCLE_NEXT_INT
 @@@
-@@@ �Ĥꥵ�����������å����ƻĤäƤ���м���̿���¹�
-@@@ CLI��PHP�ʤɥե饰���ѹ��������Ϥ���
+@@@ 残りサイクルをチェックして残っていれば次の命令を実行
+@@@ CLI・PHPなどフラグを変更した場合はこれ
 @@@
 .macro	CYCLE_NEXT_INT	n
 	CYCLE_NEXT	\n
@@ -144,7 +144,7 @@ ldmfd sp!,{r0-r3,r12,lr}
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@@
-@@@ �����ڡ��������ɤ�
+@@@ ゼロページから読む
 @@@
 .macro	ZP_READ
 	add	REG_ADDR, REG_ADDR, #OTOFFS_NES_RAM
@@ -152,14 +152,14 @@ ldmfd sp!,{r0-r3,r12,lr}
 .endm
 
 @@@
-@@@ �ɤ���塤�񤯾��Ϥ����Ȥ�(���եȤʤ�)���Ǥ⡤���Ʊ��
+@@@ 読んだ後，書く場合はこれを使う(シフトなど)。でも，上と同じ
 @@@
 .macro	ZP_READ_W
 	ZP_READ
 .endm
 
 @@@
-@@@ ���ɥ쥹���ɤ�
+@@@ アドレスを読む
 @@@
 .macro	ZP_READ_ADDR update_db=0
 	ZP_READ
@@ -173,7 +173,7 @@ ldmfd sp!,{r0-r3,r12,lr}
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@@
-@@@ �����ڡ����˽�
+@@@ ゼロページに書く
 @@@
 .macro	ZP_WRITE	reg=r0
 	add	REG_ADDR, REG_ADDR, #OTOFFS_NES_RAM
@@ -181,7 +181,7 @@ ldmfd sp!,{r0-r3,r12,lr}
 .endm
 
 @@@
-@@@ ZP_READ_W ���ɤ���塤Ʊ�����ɥ쥹�˽�
+@@@ ZP_READ_W で読んだ後，同じアドレスに書く
 @@@
 .macro	ZP_WRITE_W
 	strb	r0, [REG_ADDR]
@@ -191,22 +191,22 @@ ldmfd sp!,{r0-r3,r12,lr}
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@@
-@@@ 16�ӥåȥ��ɥ쥹���ɤ߽�
+@@@ 16ビットアドレスの読み書き
 @@@
-@@@ REG_ADDR	=> 16�ӥåȥ��ɥ쥹
-@@@ r0		=> �񤯥Х���(write)
-@@@ r0		<= �ɤ���Х���(read)���񤤤��Х���(write)
+@@@ REG_ADDR	=> 16ビットアドレス
+@@@ r0		=> 書くバイト(write)
+@@@ r0		<= 読んだバイト(read)・書いたバイト(write)
 @@@
 
 @@@
-@@@ 3�����̿�᤬����
+@@@ 3種類の命令がある
 @@@
-@@@ ����¿���Τ�
-@@@ 16�ӥåȥ��ɥ쥹����8�ӥåȥ����ɤ��������̿��
-@@@ ����¿���Τ�
-@@@ �����ɡ��׻������ȥ��򤹤�̿��
-@@@ �Ĥ��
-@@@ ���ȥ����������̿��
+@@@ 一番多いのが
+@@@ 16ビットアドレスから8ビットロードするだけの命令
+@@@ 次に多いのが
+@@@ ロード，計算，ストアをする命令
+@@@ 残りは
+@@@ ストアするだけの命令
 
 @@@
 @@@ Read byte
@@ -222,7 +222,7 @@ ldmfd sp!,{r0-r3,r12,lr}
 .endm
 
 @@@
-@@@ �ɤ�����Ƚ񤯾��
+@@@ 読んだあと書く場合
 @@@
 @@@ READ_WRITE_1
 @@@ OP
@@ -231,8 +231,8 @@ ldmfd sp!,{r0-r3,r12,lr}
 @@@ READ_WRITE_3
 @@@ OP
 @@@ READ_WRITE_4
-@@@ �Τ褦�˻Ȥ�
-@@@ OP�Ǥ�r3����¸���ʤ���Фʤ�ʤ�
+@@@ のように使う
+@@@ OPではr3を保存しなければならない
 
 .macro	READ_WRITE_1
 	tst	REG_ADDR, #0xe000
@@ -273,11 +273,11 @@ ldmfd sp!,{r0-r3,r12,lr}
 .endm
 
 @@@
-@@@ �����ơ������ɬ�פȤ���Τϥ�����̿�ᡦ�����ߡ��ꥻ�åȤΤߤǤ���
-@@@ ���ޤ���פǤʤ��Τ�Ŭ���Ǥ褤��
-@@@ �ƥ�ݥ��˻Ȥ���쥸������­��ʤ��Τ� REG_PC ��Ȥ������ˤ����
-@@@ ������Ǿ�񤭤���롣
-@@@ REG_ADDR���ѹ����뤬���ˤ����
+@@@ そして，これを必要とするのはジャンプ命令・割り込み・リセットのみである
+@@@ あまり重要でないので適当でよい。
+@@@ テンポラリに使えるレジスタが足りないので REG_PC を使うが気にするな
+@@@ すぐ後で上書きされる。
+@@@ REG_ADDRを変更するが気にするな
 @@@
 .macro	READ_WORD
 	READ    0
@@ -291,7 +291,7 @@ ldmfd sp!,{r0-r3,r12,lr}
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@@
-@@@ �����å��Υץå��塦�ݥå�
+@@@ スタックのプッシュ・ポップ
 @@@
 @@@
 
@@ -307,7 +307,7 @@ ldmfd sp!,{r0-r3,r12,lr}
 	add	r1, REG_OP_TABLE, #OTOFFS_NES_STACK
 	mov	r2, r0, lsr #8
 	strb	r2, [r1, REG_S, lsr #24]
-	@@ �������� REG_S �Υ����С��ե����򵤤ˤ��Ƥߤ�
+	@@ いちおう REG_S のオーバーフローを気にしてみる
 	sub	REG_S, REG_S, #1 << 24
 	strb	r0, [r1, REG_S, lsr #24]
 	sub	REG_S, REG_S, #1 << 24
@@ -333,17 +333,17 @@ ldmfd sp!,{r0-r3,r12,lr}
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@@
-@@@ ���ɥ�å��󥰥⡼��
+@@@ アドレッシングモード
 @@@
 
 .macro	IMPLIED
-	@@ �ʤˤ�ɬ�פʤ�
+	@@ なにも必要ない
 .endm
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@@
-@@@ ���ڥ��ɤ�1�Х��Ȥξ��
+@@@ オペランドが1バイトの場合
 @@@
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -406,7 +406,7 @@ ldmfd sp!,{r0-r3,r12,lr}
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@@
-@@@ ���ڥ��ɤ�2�Х��Ȥξ��
+@@@ オペランドが2バイトの場合
 @@@
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -467,10 +467,10 @@ ldmfd sp!,{r0-r3,r12,lr}
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-@@@ P ����������
-@@@ r0		=> 6502 �� P �쥸����
-@@@ REG_NZ	<= �������줿 REG_NZ
-@@@ REG_P_REST	<= �������줿 REG_P_REST
+@@@ P を復元する
+@@@ r0		=> 6502 の P レジスタ
+@@@ REG_NZ	<= 復元された REG_NZ
+@@@ REG_P_REST	<= 復元された REG_P_REST
 .macro	LOAD_P
 	mov	REG_NZ, #0
 	tst	r0, #P_Z_FLAG
@@ -483,11 +483,11 @@ ldmfd sp!,{r0-r3,r12,lr}
 	orr	REG_P_REST, REG_P_REST, r0
 .endm
 
-@@@ P ����¸����
+@@@ P を保存する
 @@@
-@@@ REG_NZ	=> ���ˤ��� REG_NZ
-@@@ REG_P_REST	=> ���ˤ��� REG_P_REST
-@@@ r0		<= 6502 �� P
+@@@ REG_NZ	=> 元にする REG_NZ
+@@@ REG_P_REST	=> 元にする REG_P_REST
+@@@ r0		<= 6502 の P
 .macro	SAVE_P
 	and	r0, REG_P_REST, #P_REST_FLAGS
 	tst	REG_NZ, #0x80 << 24
@@ -510,7 +510,7 @@ ldmfd sp!,{r0-r3,r12,lr}
 @@@
 @@@ NOP
 @@@
-@@@ �ʤˤ⤷�ʤ�
+@@@ なにもしない
 opEA:	@ NOP
 	IMPLIED
 	CYCLE_NEXT	2
@@ -520,11 +520,11 @@ opEA:	@ NOP
 @@@
 @@@ CLC/SEC/CLD/SED/CLI/SEI/CLV
 @@@
-@@@ �ե饰���̿��
-@@@ ���٤�1�Х���
+@@@ フラグ操作命令
+@@@ すべて1バイト
 @@@
-@@@ ������ѹ��Ǥ���ե饰������REG_P_REST�ˤ���
-@@@ I���ѹ�������ϳ����ߤ�����å����ʤ�Фʤ�ʤ�
+@@@ これで変更できるフラグは全てREG_P_RESTにある
+@@@ Iを変更する場合は割り込みをチェックしなればならない
 @@@
 op18:	@ CLC
 	IMPLIED
@@ -566,10 +566,10 @@ opB8:	@ CLV
 @@@
 @@@ TAX/TXA/TAY/TYA/TSX/TXS
 @@@
-@@@ �쥸������ž��̿��
-@@@ ���٤�1�Х���
+@@@ レジスタ間転送命令
+@@@ すべて1バイト
 @@@
-@@@ TXS�ʳ���NZ���ѹ�����
+@@@ TXS以外はNZを変更する
 @@@
 opAA:	@ TAX
 	IMPLIED
@@ -613,8 +613,8 @@ op9A:	@ TXS
 @@@
 @@@ PHA/PHP/PLA/PLP
 @@@
-@@@ �����å����̿��
-@@@ PLA��NZ��PLP�����ƤΥե饰���ѹ�����
+@@@ スタック操作命令
+@@@ PLAはNZをPLPは全てのフラグを変更する
 @@@
 op48:	@ PHA
 	IMPLIED
@@ -647,7 +647,7 @@ op28:	@ PLP
 @@@
 @@@ LDA/LDX/LDY
 @@@
-@@@ �쥸�����˥�����
+@@@ レジスタにロード
 @@@
 @@@ NZVC
 @@@ ----
@@ -792,7 +792,7 @@ opBC:	@ LDY $nnnn, X
 @@@
 @@@ STA/STX/STY
 @@@
-@@@ �쥸�����Υ��ȥ�
+@@@ レジスタのストア
 @@@
 @@@ NZVC
 @@@ ----
@@ -889,8 +889,8 @@ op8C:	@ STY $nnnn
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@@
 @@@ INC/INX/INY/DEC/DEX/DEY
-@@@ ���󥯥���ȡ��ǥ������
-@@@ ���٤�NZ���ѹ����롣C���ѹ����ʤ�
+@@@ インクリメント，デクリメント
+@@@ すべてNZを変更する。Cは変更しない
 @@@
 @@@ NZVC
 @@@ ----
@@ -1022,14 +1022,14 @@ op88:	@ DEY
 @@@
 @@@ ADC/SBC
 @@@
-@@@ ����꡼/�ܥ����Ĥ��βû�/����
+@@@ キャリー/ボローつきの加算/減算
 
 .macro	OP_ADC
-	@@ ����꡼�򥻥åȤ���
+	@@ キャリーをセットして
 	movs	r1, REG_P_REST, lsr #1
-	@@ ��24�ӥåȤ�����1��
+	@@ 上24ビットを全て1に
 	subcs	r0, r0, #0x100
-	@@ ����꡼�Ĥ��βû�
+	@@ キャリーつきの加算
 	adcs	REG_A, REG_A, r0, ror #8
 	mov	REG_NZ, REG_A, asr #24
 	adc	REG_P_REST, r1, r1
@@ -1038,9 +1038,9 @@ op88:	@ DEY
 .endm
 
 .macro	OP_SBC
-	@@ ����꡼�򥻥åȤ���
+	@@ キャリーをセットして
 	movs	r1, REG_P_REST, lsr #1
-	@@ ����꡼�Ĥ��θ���
+	@@ キャリーつきの減算
 	sbcs	REG_A, REG_A, r0, lsl #24
 	and	REG_A, REG_A, #0xFF << 24
 	mov	REG_NZ, REG_A, asr #24
@@ -1160,7 +1160,7 @@ opF1:	@ SBC ($nn), Y
 @@@
 @@@ AND/EOR/ORA
 @@@
-@@@ �ӥåȱ黻�����٤�NZ���ѹ�����
+@@@ ビット演算。すべてNZを変更する
 @@@
 @@@ NZVC
 @@@ ----
@@ -1345,7 +1345,7 @@ op11:	@ ORA ($nn), Y
 @@@
 @@@ CMP/CPX/CPY
 @@@
-@@@ ��ӡ����٤�NZC���ѹ�����
+@@@ 比較。すべてNZCを変更する
 @@@
 @@@ NZVC
 @@@ ----
@@ -1469,7 +1469,7 @@ opCC:	@ CPY $nnnn
 @@@
 @@@ BIT
 @@@
-@@@ Z <= A �� M == 0
+@@@ Z <= A ∧ M == 0
 @@@ N <= M[7]
 @@@ V <= M[6]
 @@@
@@ -1504,9 +1504,9 @@ op2C:	@ BIT $nnnn
 @@@
 @@@ ASL/LSR
 @@@
-@@@ �����եȡ������ե�
+@@@ 右シフト・左シフト
 @@@
-@@@ NZC���ѹ�����
+@@@ NZCを変更する
 @@@
 .macro	OP_ASL
 	movs	REG_NZ, r0, lsl #25
@@ -1525,14 +1525,14 @@ op2C:	@ BIT $nnnn
 
 .macro	OP_LSR
 	movs	r0, r0, lsr #1
-	@@ N��Ω���ʤ�
+	@@ Nは立たない
 	mov	REG_NZ, r0
 	orrcs	REG_P_REST, REG_P_REST, #P_REST_C_FLAG
 	biccc	REG_P_REST, REG_P_REST, #P_REST_C_FLAG
 .endm
 
 .macro	OP_LSR_A
-	@@ N��Ω���ʤ�
+	@@ Nは立たない
 	movs	REG_NZ, REG_A, lsr #25
 	mov	REG_A, REG_NZ, lsl #24
 	orrcs	REG_P_REST, REG_P_REST, #P_REST_C_FLAG
@@ -1632,23 +1632,23 @@ op5E:	@ LSR $nnnn, X
 @@@
 @@@ ROL/ROR
 @@@
-@@@ ����ž/����ž
+@@@ 左回転/右回転
 @@@
-@@@ NZC���ѹ�����
+@@@ NZCを変更する
 @@@
 .macro	OP_ROL
-	@@ ����꡼�򥻥å�
+	@@ キャリーをセット
 	movs	r1, REG_P_REST, lsr #1
-	@@ ���ե�
+	@@ シフト
 	adc	r0, r0, r0
-	@@ NZ�ȥ���꡼�򥻥å�
+	@@ NZとキャリーをセット
 	orrs	REG_NZ, r0, r0, lsl #24
-	@@ ����꡼����¸
+	@@ キャリーを保存
 	adc	REG_P_REST, r1, r1
 .endm
 
 .macro	OP_ROL_A
-	@@ ����꡼�򥻥å�
+	@@ キャリーをセット
 	movs	r1, REG_P_REST, lsr #1
 	orrcs	REG_A, REG_A, #0x80 << 16
 	movs	REG_A, REG_A, lsl #1
@@ -1766,7 +1766,7 @@ op7E:	@ ROR $nnnn, X
 @@@
 @@@ BCC/BCS/BNE/BEQ/BPL/BMI/BVC/BVS
 @@@
-@@@ ʬ��
+@@@ 分岐
 @@@
 
 .macro HAD_BRANCH
@@ -1809,14 +1809,14 @@ op7E:	@ ROR $nnnn, X
 
 op90:	@ BCC $nn
 	tst	REG_P_REST, #P_REST_C_FLAG
-	@@ Z ��Ω�Ƥ�
+	@@ Z が立てば
 	BRANCH_EQ
 	CYCLE_NEXT	2
 	.pool
 
 opB0:	@ BCS $nn
 	tst	REG_P_REST, #P_REST_C_FLAG
-	@@ Z ������Ƥ��
+	@@ Z が下りてれば
 	BRANCH_NE
 	CYCLE_NEXT	2
 
@@ -1832,26 +1832,26 @@ opF0:	@ BEQ $nn
 
 op30:	@ BMI $nn
 	tst	REG_NZ, #0x80 << 24
-	@@ ��̤�0�Ǥʤ��ʤ�
+	@@ 結果が0でないなら
 	BRANCH_NE
 	CYCLE_NEXT	2
 
 op10:	@ BPL $nn
 	tst	REG_NZ, #0x80 << 24
-	@@ ��̤�0�ʤ�
+	@@ 結果が0なら
 	BRANCH_EQ
 	CYCLE_NEXT	2
 
 op50:	@ BVC $nn
 	tst	REG_P_REST, #P_REST_V_FLAG
-	@@ ��̤�0�ʤ�
+	@@ 結果が0なら
 	BRANCH_EQ
 	CYCLE_NEXT	2
 
 
 op70:	@ BVS $nn
 	tst	REG_P_REST, #P_REST_V_FLAG
-	@@ ���0�Ǥʤ��ʤ�
+	@@ 結果0でないなら
 	BRANCH_NE
 	CYCLE_NEXT	2
 	.pool
@@ -1911,13 +1911,13 @@ op70:	@ BVS $nn
 .endm
 
 .macro	OP_RLA
-	@@ ����꡼�򥻥å�
+	@@ キャリーをセット
 	movs	r1, REG_P_REST, lsr #1
-	@@ ���ե�
+	@@ シフト
 	adc	r0, r0, r0
-	@@ NZ�ȥ���꡼�򥻥å�
+	@@ NZとキャリーをセット
 	orrs	REG_NZ, r0, r0, lsl #24
-	@@ ����꡼����¸
+	@@ キャリーを保存
 	adc	REG_P_REST, r1, r1
 	and	REG_A,REG_A,r0,lsl #24
 	orr	REG_NZ, REG_A, REG_A, lsr #24		@ according to fceu
@@ -2800,7 +2800,7 @@ op60:
 	CYCLE_NEXT	6
 
 @@@
-@@@ �����ߤν���
+@@@ 割り込みの処理
 @@@ WARNING: decrements REG_PC
 @@@
 do_int:
@@ -2834,7 +2834,7 @@ do_int:
 
 
 @@@
-@@@ �ꥻ�åȤν���
+@@@ リセットの処理
 @@@
 	.globl	reset_cpu
 
@@ -2976,10 +2976,10 @@ write_byte:
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@@
-@@@ 6502 �򥨥ߥ�졼�Ȥ���
+@@@ 6502 をエミュレートする
 @@@
-@@@ REG_CYCLE	=> �¹Ԥ��륵������
-@@@ REG_CYCLE	<= �ĤäƤ��륵������(���ޤ�����)
+@@@ REG_CYCLE	=> 実行するサイクル
+@@@ REG_CYCLE	<= 残っているサイクル(零または負)
 	.globl	cpu_exec
 cpu_exec:
 	stmfd   r13!,{r4-r11,lr}
@@ -3017,8 +3017,8 @@ cpu_exec_end:
 	bx      lr
 
 @@@
-@@@ �ߤ�Ф狼��褦�˥��ڥ����ɤ򥤥�ǥå����ˤ��������ץơ��֥�
-@@@ 0x400�Х���
+@@@ みればわかるようにオペコードをインデックスにしたジャンプテーブル
+@@@ 0x400バイト
 @@@
 
 @ the code does RAM accesses through cpu_exec_table pointer + offset, so
@@ -3077,8 +3077,8 @@ cpu_exec_table:
 	.long	opF8, opF9, opFA, opFB, opFC, opFD, opFE, opFF
 
 @@@
-@@@ ���ڥ����ɥơ��֥��ľ��ˤ�����֤�REG_OP_TABLE���Ф�
-@@@ ���ѤǤ���
+@@@ オペコードテーブルの直後にこれを置くREG_OP_TABLE相対で
+@@@ 利用できる
 @@@
 nes_registers:
 	.fill   0x40, 1, 0
@@ -3284,4 +3284,3 @@ do_irq_hook_final:
 
 
 @ vim:filetype=armasm
-
